@@ -4,6 +4,11 @@ import requests
 import json
 import logging
 
+import configme
+
+
+
+
 # disable ssl checks
 requests.packages.urllib3.disable_warnings()
 # disable all ssl checks
@@ -16,9 +21,8 @@ import ckanclient
 
 # This restores the same behavior as before.
 #
-API_KEY = 'my-api-key'
-CKAN_URL = 'my-ckan-url'
-ckan = ckanclient.CkanClient(base_location=CKAN_URL, api_key=API_KEY)
+
+ckan = ckanclient.CkanClient(base_location=configme.CKAN_URL, api_key=configme.API_KEY)
 
 # start the web server
 app = flask.Flask(__name__)
@@ -35,6 +39,11 @@ app.logger.addHandler(ch)
 
 def showAsJson(elem):
     return flask.Response(json.dumps(elem), mimetype='application/json')
+
+
+# TODO: here you need to convert the contextElement to a smartCitizentElement
+def convertContextElement(contextElement):
+    return contextElement
 
 
 # default route @homepage
@@ -65,8 +74,8 @@ def devices():
         print "Dataset:" + package
         try:
             # Get the Dataset description
-            headers = {'Authorization': API_KEY}
-            r = requests.get(url=CKAN_URL+"/rest/dataset/" + package, headers=headers, verify=False)
+            headers = {'Authorization': configme.API_KEY}
+            r = requests.get(url=configme.CKAN_URL + "/rest/dataset/" + package, headers=headers, verify=False)
             # convert the response to json
             jsonResponse = json.loads(r.text);
             # get the format of the dataset
@@ -93,7 +102,7 @@ def devices():
                         # append the response object to the full device list
                         for contextElement in contextResponses:
                             # TODO: here you need to convert the contextElement to a smartCitizentElement
-                            smartCitizentElement = conventContextElement(contextElement)
+                            smartCitizentElement = convertContextElement(contextElement)
                             responseObjects.append(smartCitizentElement)
                 except requests.HTTPError, e:
                     print 'HTTP ERROR %s occured' % e.code
@@ -113,8 +122,3 @@ def tags():
 
 if __name__ == '__main__':
     app.run()
-
-
-# TODO: here you need to convert the contextElement to a smartCitizentElement
-def conventContextElement(contextElement):
-    return contextElement
